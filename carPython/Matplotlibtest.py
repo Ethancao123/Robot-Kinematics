@@ -1,10 +1,14 @@
-import matplotlib.pyplot as plt
 import numpy as np
-fig, ax = plt.subplots()
-x_coords = np.array([0])
-y_coords = np.array([0])
+import matplotlib.pyplot as plt
+from IPython.display import display, clear_output
+
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1) 
+
 for t in range(360):
-    x_coords.extend(np.cos(t))
-    y_coords.extend(np.sin(t))
-    plt.scatter(x_coords, y_coords)
-    
+    ax.set_xlim(-1.5, 1.5)
+    ax.set_ylim(-1.5, 1.5)
+    ax.plot(np.cos(t*np.pi/180), np.sin(t*np.pi/180), marker='.')
+    display(fig)    
+    clear_output(wait = True)
+    plt.pause(1)
