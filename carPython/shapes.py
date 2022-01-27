@@ -12,10 +12,10 @@ fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
 ax.set_xlim(0, 6)
 ax.set_ylim(0, 6)
-point1 = [3, 1]
-point2 = [3, 3]
-point3 = [1, 3]
-point4 = [1, 1]
+point1 = [1, 1]
+point2 = [3, 1]
+point3 = [3, 3]
+point4 = [1, 3]
 IntervalTime = 0.25
 travel_speed = 1
 
@@ -74,13 +74,14 @@ def semi_circle(p1, p2, carryover = 0):    #draws a counter-clockwise half circl
     center = midpoint(p2, p1)
     vector = [p1[0] - center[0], p1[1] - center[1]]
     initial_angle = math.atan2(vector[1], vector[0])
+    carryover_angle = carryover / radius
     arc_measure = travel_speed / radius    # in radians
     for t in range(int(np.pi / arc_measure)):
-        x_coord = np.cos(initial_angle + t * arc_measure) * radius + center[0]
-        y_coord = np.sin(initial_angle + t * arc_measure) * radius + center[1]
+        x_coord = np.cos(carryover_angle + initial_angle + (t + 1) * arc_measure) * radius + center[0]
+        y_coord = np.sin(carryover_angle + initial_angle + (t + 1) * arc_measure) * radius + center[1]
         next_point = [x_coord, y_coord]
         display_point(x_coord, y_coord)
-        prev_point = next_point
+    return radius * np.pi % travel_speed
 
 
 
@@ -113,11 +114,9 @@ def draw_quad():
 
 def draw_loop():
     s.enter(0, 1, path(point1, point2))
-    s.enter(distance(point1, point2)/travel_speed, 1, semi_circle(point2, point3))
+    s.enter(0, 1, semi_circle(point2, point3))
     s.enter(0, 1, path(point3, point4))
     s.enter(0, 1, semi_circle(point4, point1))
-
-    # distance(point1, point2)/travel_speed
     plt.show()
 
 
