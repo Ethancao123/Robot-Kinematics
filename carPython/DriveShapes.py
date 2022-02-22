@@ -78,10 +78,6 @@ def path(end_point, carryover=0):
     drive.rr.move(forward_speed + horizontal_speed)
     time.sleep(t/100)
 
-def display_point(x_coord, y_coord):
-    time.sleep(1)
-
-
 def semi_circle(p1, p2, carryover=0):    # draws a counter-clockwise half circle
     diameter = distance(p1, p2)
     radius = diameter / 2
