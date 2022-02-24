@@ -4,6 +4,7 @@ import time #used to set delay time to control moving distance
 from board import SCL,SDA
 import busio
 from adafruit_pca9685 import PCA9685
+from simple_pid import pid
 
 #set up Raspberry Pi GPIO
 import RPi.GPIO as GPIO #control through GPIO pins
@@ -18,7 +19,6 @@ pca = PCA9685(i2c)           #adafruit_pca9685.PCA9685(i2c)   instance PCA9685 o
 pca.frequency = 1000 #set pwm clock in Hz (debug 60 was 1000)
 # usage: pwm_channel = pca.channels[0] instance example
 #        pwm_channel.duty_cycle = speed (0 .. 100)  speed example
-
 
 #motors
 # front controller, PCA channel
@@ -96,11 +96,13 @@ high = 0xFFFF #1 was True
 low  = 0      #0 was False
 
 class Wheel:
-  def __init__(self, name, enCh,in1Ch,in2Ch):
+  def __init__(self, name, enCh,in1Ch,in2Ch, encoder):
     self.name = name #for debug
     self.en  = pca.channels[enCh]  #EN  wheel 'speed', actually sets power
     self.in1 = pca.channels[in1Ch] #IN1, IN3 wheel direction control 1
     self.in2 = pca.channels[in2Ch] #IN2, IN4 wheel direction control 2
+    self.pid = PID(kp, ki, kd)
+    self.encoder = encoder
     #If IN1=True  and IN2=False motor moves forward, 
     #If IN1=False and IN2=True  motor moves backward
     #in both other cases motor will stop/brake
@@ -112,9 +114,10 @@ class Wheel:
   def move(self,power):
     self.in1.duty_cycle = high if power > 0 else low
     self.in2.duty_cycle = low  if power > 0 else high
-    self.en.duty_cycle  = getPWMPer(power) if power > 0 else getPWMPer(-power)
-    #print("move "+self.name+" @ "+str(power)) #debug
-    #positive power forward, negative power reverse/back; 0 = coast, 100% = 4095
+    getPWMPer(power) if power > 0 else getPWMPer(-power)
+    pid.setpoint = 1
+    control = self.pid(self.encoder.readSpeed)
+    self.en.duty_cycle  = control
     
   def brake(self):
     self.in1.duty_cycle = low
@@ -124,12 +127,7 @@ class Wheel:
     
 #end of Wheel class
   
-#Set up Wheel instances with connections, ch 0 is left end, 
-#leaving one pin per quad for future
-rl = Wheel("rl", ENBRL, IN3RL, IN4RL) #Rear-left wheel
-rr = Wheel("rr", ENARR, IN1RR, IN2RR) #Rear-right wheel
-fl = Wheel("fl", ENBFL, IN3FL, IN4FL) #Front-left wheel
-fr = Wheel("fr", ENAFR, IN1FR, IN2FR) #Front-right wheel
+
 
 #encoder class 
 class Encoder:
@@ -225,6 +223,13 @@ sfl = Encoder("sfl", S1FL, S2FL,-1)
 sfr = Encoder("sfr", S1FR, S2FR, 1)
 srl = Encoder("srl", S1RL, S2RL, -1)
 srr = Encoder("srr", S1RR, S2RR, 1)
+
+#Set up Wheel instances with connections, ch 0 is left end, 
+#leaving one pin per quad for future
+rl = Wheel("rl", ENBRL, IN3RL, IN4RL, srl) #Rear-left wheel
+rr = Wheel("rr", ENARR, IN1RR, IN2RR, srr) #Rear-right wheel
+fl = Wheel("fl", ENBFL, IN3FL, IN4FL, sfl) #Front-left wheel
+fr = Wheel("fr", ENAFR, IN1FR, IN2FR, sfr) #Front-right wheel
 
 def test_speed():
   sfl.readSpeed() 
