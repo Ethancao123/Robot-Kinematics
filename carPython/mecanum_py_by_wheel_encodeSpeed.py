@@ -115,7 +115,7 @@ class Wheel:
     self.in1.duty_cycle = high if power > 0 else low
     self.in2.duty_cycle = low  if power > 0 else high
     getPWMPer(power) if power > 0 else getPWMPer(-power)
-    pid.setpoint = 1
+    pid.setpoint = power
     control = self.pid(self.encoder.readSpeed)
     self.en.duty_cycle  = control
     
