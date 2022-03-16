@@ -4,14 +4,10 @@ import time #used to set delay time to control moving distance
 from board import SCL,SDA
 import busio
 from adafruit_pca9685 import PCA9685
-from simple_pid import PID
 
 #set up Raspberry Pi GPIO
 import RPi.GPIO as GPIO #control through GPIO pins
 
-kp = 2
-ki = 8
-kd = 0
 
 # adafruit forces GPIO.setmode(GPIO.BCM)
 GPIO.setmode(GPIO.BCM)
@@ -100,14 +96,11 @@ high = 0xFFFF #1 was True
 low  = 0      #0 was False
 
 class Wheel:
-  def __init__(self, name, enCh,in1Ch,in2Ch,encoder,pid):
+  def __init__(self, name, enCh,in1Ch,in2Ch):
     self.name = name #for debug
     self.en  = pca.channels[enCh]  #EN  wheel 'speed', actually sets power
     self.in1 = pca.channels[in1Ch] #IN1, IN3 wheel direction control 1
     self.in2 = pca.channels[in2Ch] #IN2, IN4 wheel direction control 2
-    self.encoder = encoder
-    self.pid = pid
-    self.pid.output_limits = (15,100)
     #If IN1=True  and IN2=False motor moves forward, 
     #If IN1=False and IN2=True  motor moves backward
     #in both other cases motor will stop/brake
@@ -119,10 +112,7 @@ class Wheel:
   def move(self,power):
     self.in1.duty_cycle = high if power > 0 else low
     self.in2.duty_cycle = low  if power > 0 else high
-    self.pid.setpoint = power
-    power = self.pid(self.encoder.speed)
     self.en.duty_cycle  = getPWMPer(power) if power > 0 else getPWMPer(-power)
-    print(self.name + "   " + str(power) + "   " + str(self.encoder.speed))
     #print("move "+self.name+" @ "+str(power)) #debug
     #positive power forward, negative power reverse/back; 0 = coast, 100% = 4095
     
@@ -133,6 +123,13 @@ class Wheel:
     #electric braking effect, should stop movement
     
 #end of Wheel class
+  
+#Set up Wheel instances with connections, ch 0 is left end, 
+#leaving one pin per quad for future
+rl = Wheel("rl", ENBRL, IN3RL, IN4RL) #Rear-left wheel
+rr = Wheel("rr", ENARR, IN1RR, IN2RR) #Rear-right wheel
+fl = Wheel("fl", ENBFL, IN3FL, IN4FL) #Front-left wheel
+fr = Wheel("fr", ENAFR, IN1FR, IN2FR) #Front-right wheel
 
 #encoder class 
 class Encoder:
@@ -202,7 +199,7 @@ class Encoder:
   def readSpeed(self):
     #correct for side of car left goes - otherwise
     if self.time != 0 and self.time != self.lastTime: #store speed in clicks/nS
-      self.speed = self.side * (self.counter - self.lastCounter)/(self.time - self.lastTime) * 100000
+      self.speed = self.side * (self.counter - self.lastCounter)/(self.time - self.lastTime)
     else:
       self.speed = 0
 
@@ -230,13 +227,6 @@ sfl = Encoder("sfl", S1FL, S2FL,-1)
 sfr = Encoder("sfr", S1FR, S2FR, 1)
 srl = Encoder("srl", S1RL, S2RL, -1)
 srr = Encoder("srr", S1RR, S2RR, 1)
-
-#Set up Wheel instances with connections, ch 0 is left end, 
-#leaving one pin per quad for future
-rl = Wheel("rl", ENBRL, IN3RL, IN4RL, srl, PID(kp,ki,kd)) #Rear-left wheel
-rr = Wheel("rr", ENARR, IN1RR, IN2RR, srr, PID(kp,ki,kd)) #Rear-right wheel
-fl = Wheel("fl", ENBFL, IN3FL, IN4FL, sfl, PID(kp,ki,kd)) #Front-left wheel
-fr = Wheel("fr", ENAFR, IN1FR, IN2FR, sfr, PID(kp,ki,kd)) #Front-right wheel
 
 def test_speed():
   sfl.readSpeed() 

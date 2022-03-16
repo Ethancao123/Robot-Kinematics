@@ -2,18 +2,22 @@ import math
 import time
 import sched
 import numpy as np
-import mecanum_py_by_wheel_encodeSpeed as drive
+#import mecanum_py_by_wheel_encodeSpeed as drive
+import original_mecanum as drive
+from scipy import interpolate
+
 
 
 s = sched.scheduler(time.time, time.sleep)
 point1 = [0, 0]
-point2 = [30, 30]
-point3 = [3, 3]
-point4 = [1, 3]
+point2 = [25, 25]
+point3 = [50, 50]
+point4 = [50, 0]
 Path_Points = [[0, 0]]
 IntervalTime = 0
-travel_speed = 50
+travel_speed = 55
 speed_mult = 1
+base_speed = 0
 
 robot_width = 1
 robot_length = 1
@@ -40,11 +44,11 @@ def path(end_point):
     distance = dist(start_point, end_point)
     t = distance / travel_speed
     # determines if the lines grows in the positive or negative y direction
-    forward_speed = np.sin(angle) * travel_speed
-    horizontal_speed = np.cos(angle) * travel_speed
+    forward_speed = np.sin(angle) * travel_speed + base_speed
+    horizontal_speed = np.cos(angle) * travel_speed + base_speed
     rotational_speed = 0
     ab = robot_length / 2 + robot_width / 2
-    print(forward_speed + "  " + horizontal_speed)
+    print("" + str(forward_speed) + "  " + str(horizontal_speed))
     drive.fl.move(forward_speed + horizontal_speed - rotational_speed * ab)
     drive.fr.move(forward_speed - horizontal_speed + rotational_speed * ab)
     drive.rl.move(forward_speed - horizontal_speed - rotational_speed * ab)
@@ -98,13 +102,15 @@ def draw_loop():
     s.enter(0, 1, path(point3, point4))
     s.enter(0, 1, semi_circle(point4, point1))
 
+def draw_spline():
+    sleep(1)
 
 def main():
     draw_circle()
     print(Path_Points)
     for x in Path_Points:
         path(x)
-    drive.coastAll(1)
+    drive.stop_car()
 
 
 if __name__ == '__main__':
