@@ -1,13 +1,18 @@
+#!/bin/env python
 import time #used to set delay time to control moving distance
 
 #set up PC9685 osoyoo/AdaFruit
 from board import SCL,SDA
 import busio
 from adafruit_pca9685 import PCA9685
-from simple_pid import pid
+from simple_pid import PID
 
 #set up Raspberry Pi GPIO
 import RPi.GPIO as GPIO #control through GPIO pins
+
+kp = 10
+ki = 0
+kd = 0
 
 
 # adafruit forces GPIO.setmode(GPIO.BCM)
@@ -115,9 +120,9 @@ class Wheel:
     self.in1.duty_cycle = high if power > 0 else low
     self.in2.duty_cycle = low  if power > 0 else high
     getPWMPer(power) if power > 0 else getPWMPer(-power)
-    pid.setpoint = power
-    control = self.pid(self.encoder.readSpeed)
-    self.en.duty_cycle  = control
+    self.pid.setpoint = power
+    control = self.pid(self.encoder.readSpeed())
+    self.en.duty_cycle  = int(control)
     
   def brake(self):
     self.in1.duty_cycle = low
@@ -198,6 +203,7 @@ class Encoder:
       self.speed = self.side * (self.counter - self.lastCounter)/(self.time - self.lastTime)
     else:
       self.speed = 0
+    return self.speed
 
     # lastTime and lastCounter were set at last call to this function
     self.lastTime = self.time #time was set at each/last call to .read
@@ -243,6 +249,9 @@ def test_Encoders():
   sfr.readEncoderTest() 
   srl.readEncoderTest() 
   srr.readEncoderTest() 
+
+def pid_test():
+  
 
 #set up call back functions, ignore parameter and unique
 #def callback_sfl(channel):
