@@ -1,11 +1,11 @@
 import numpy as np
-#from scipy.spatial.transform import Rotation
+# from scipy.spatial.transform import Rotation
 
 
 class Frame:
     frames = []
     points = []
-    localOrigin = np.array([[0], [0], [0]])  #need to figure out what this is used for
+    localOrigin = np.array([[0], [0], [0]])  # need to figure out what this is used for
     R = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])  # not used
 
     def __init__(self, name, p):
@@ -56,8 +56,8 @@ class Frame:
         uy = unitVector[1]
         uz = unitVector[2]
         matrix = np.array([[np.cos(a) + ux ** 2 * (1-np.cos(a)), ux * uy * (1 - np.cos(a)) - uz * np.sin(a), ux * uz * (1 - np.cos(a) + uy * np.sin(a))],
-                 [uy * ux * (1 - np.cos(a)) + uz * np.sin(a), np.cos(a) + uy ** 2 * (1 - np.cos(a)), uy * uz * (1 - np.cos(a)) - ux * np.sin(a)],
-                 [uz * ux * (1 - np.cos(a) - uy * np.sin(a)), uz * uy * (1 - np.cos(a) + ux * np.sin(a)), np.cos(a) + uz ** 2 * (1 - np.cos(a))]])
+                           [uy * ux * (1 - np.cos(a)) + uz * np.sin(a), np.cos(a) + uy ** 2 * (1 - np.cos(a)), uy * uz * (1 - np.cos(a)) - ux * np.sin(a)],
+                           [uz * ux * (1 - np.cos(a) - uy * np.sin(a)), uz * uy * (1 - np.cos(a) + ux * np.sin(a)), np.cos(a) + uz ** 2 * (1 - np.cos(a))]])
         self.rotateWithMatrix(matrix)
 
     def rotateAboutLine(self, origin, vector, angle):
@@ -67,14 +67,15 @@ class Frame:
 
 
 class rotateJoint(Frame):
+    axis = None
+
     def __init__(self, name, axis, origin, p):
         self.axis = axis
         super().__init__(name, p)
         super().setOrigin(origin)
 
-    def rotateCW(a):
-        super().rotateAboutAxis(axis, a)
+    def rotateCW(self, a):
+        super().rotateAboutAxis(self.axis, a)
 
-    def rotateCCW(a):
-        super().rotateAboutAxis(axis, -1 * a)
-
+    def rotateCCW(self, a):
+        super().rotateAboutAxis(self.axis, -1 * a)
