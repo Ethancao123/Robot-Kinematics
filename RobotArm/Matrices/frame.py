@@ -79,3 +79,17 @@ class rotateJoint(Frame):
 
     def rotateCCW(self, a):
         super().rotateAboutAxis(self.axis, -1 * a)
+    
+    def rotateWithMatrix(self, matrix):
+        self.points = np.matmul(matrix, self.points)
+        for f in self.frames:
+            f.rotateWithMatrix(matrix)
+        self.axis = np.matmul(matrix, self.axis)
+
+
+class linkage(Frame):
+    
+    def __init__(self, name, p):
+        super(name, p)
+        if len(super().getOwnPoints()) != 2:
+            print("invalid linkage has " + len(super().getOwnPoints()) + " points")
