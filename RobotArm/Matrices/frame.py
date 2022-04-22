@@ -85,6 +85,7 @@ class rotateJoint(Frame):
         for f in self.frames:
             f.rotateWithMatrix(matrix)
         self.axis = np.matmul(matrix, self.axis)
+    
 
 
 class linkage(Frame):

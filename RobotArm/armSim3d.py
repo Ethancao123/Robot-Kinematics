@@ -11,15 +11,19 @@ delay = 1
 arm = defineArm()
 
 def defineArm():
-    R2 = fr.rotateJoint("R2", [])
-    L1 = fr.linkage("L1", [[0,0,0], [0, 105, 0]])
+    R3 = fr.rotateJoint("R3", [-1,0,0], [0,0,0])
+    L2 = fr.linkage("L2", [0,0,0], [0,0,105])
+    L2.addFrame(R3)
+    R2 = fr.rotateJoint("R2", [1,0,0], [0,0,0])
+    R2.addFrame(L2)
+    L1 = fr.linkage("L1", [[0,0,0], [0, 0, 80]])
     L1.addFrame(R2)
-    R1 = fr.rotateJoint("R1", [0,1,0], [0,0,0], [])
+    R1 = fr.rotateJoint("R1", [0,0,1], [0,0,0], [])
     R1.addFrame(L1)
 
 
 
-data = [[[0,0,0],[1,1,1]], [[0,0,0],[0,1,0]]]
+data = R1.getPoints()
 
 
 fig = plt.figure()
