@@ -8,7 +8,7 @@ GPIO.setmode(GPIO.BCM)
 # create i2c bus interface to access PCA9685, for example
 i2c = busio.I2C(SCL, SDA)    #busio.I2C(board.SCL, board.SDA) create i2c bus
 pca = PCA9685(i2c)           #adafruit_pca9685.PCA9685(i2c)   instance PCA9685 on bus
-pca.frequency = 1000 #set pwm clock in Hz (debug 60 was 1000)
+pca.frequency = 50 #set pwm clock in Hz (debug 60 was 1000)
 # usage: pwm_channel = pca.channels[0] instance example
 #        pwm_channel.duty_cycle = speed (0 .. 100)  speed example
 
@@ -22,7 +22,7 @@ def valmap(value, istart, istop, ostart, ostop):
 #for 0 to 100, % speed as integer, to use for PWM 
 #full range 0xFFFF, but PCS9685 ignores last Hex digit as only 12 bit resolution)
 def getPWMPer(value): 
-  return int(valmap(value, 0, 100, 0, 0xFFFF))
+  return int(valmap(value, 0, 100, 0.5/pca.frequency, 2.5/pca.frequency))
 
 while True:
     for i in range(100):
