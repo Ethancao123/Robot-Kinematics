@@ -3,28 +3,50 @@ import numpy as np
 
 
 class Frame:
+    name = None
     frames = []
-    points = []
+    parentFrame = None
+    points = None
+    originalPoints = None
     localOrigin = np.array([[0], [0], [0]])  # need to figure out what this is used for
     R = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])  # not used
 
     def __init__(self, name, p):
-        self.points = p
+        if self.isSubFrame():
+            self.points = self.shift(super.getOrigin())
+        else:
+            self.points = p
+            self.originalPoints = p
         self.name = name
+    
+    def setParent(self, parent):
+        self.parentFrame = parent
+        self.setOrigin(np.add(parent.getOrigin(), self.localOrigin))
+        self.points = self.originalPoints
+        self.shift(self.getOrigin())
 
     def addFrame(self, frame):
         self.frames.append(frame)
+        print(self.name)
+        print(self.frames)
 
     def setOrigin(self, o):
         self.localOrigin = o
+    
+    def getOrigin(self):
+        return self.localOrigin
 
     def print(self):
         print(np.array2string(self.getPoints()))
 
     def getPoints(self):
-        returned = self.points
+        returned = [self.getOwnPoints()]
         for f in self.frames:
-            returned.append(f.getPoints())
+            if len(f.getOwnPoints()) == 3 and len(f.getOwnPoints()[0]) == 1:
+                returned.append(f.getOwnPoints())
+            else:
+                for p in f.getOwnPoints():
+                    returned.append(p)
         return returned
 
     def getOwnPoints(self):
@@ -41,8 +63,8 @@ class Frame:
         for p in self.points:
             returned = np.concatenate((returned, [np.add(p, vector)]), axis=0)
         self.points = returned[1:]
-        for f in self.frames:
-            f.shift(vector)
+        # for f in self.frames:
+        #     f.shift(vector)
 
     def rotateWithMatrix(self, matrix):
         self.points = np.matmul(matrix, self.points)
@@ -65,14 +87,16 @@ class Frame:
         self.rotateAboutAxis(vector, angle)
         self.shift(origin)
 
+    def isSubFrame(self):
+        return self.parentFrame != None
+
 
 class rotateJoint(Frame):
     axis = None
 
-    def __init__(self, name, axis, origin, p):
+    def __init__(self, name, axis, p):
         self.axis = axis
         super().__init__(name, p)
-        super().setOrigin(origin)
 
     def rotateCW(self, a):
         super().rotateAboutAxis(self.axis, a)
@@ -89,8 +113,9 @@ class rotateJoint(Frame):
 
 
 class linkage(Frame):
-    
     def __init__(self, name, p):
-        super(name, p)
+        super().__init__(name, p)
         if len(super().getOwnPoints()) != 2:
             print("invalid linkage has " + len(super().getOwnPoints()) + " points")
+        super().setOrigin(p[1])
+        print(p[1])
