@@ -16,6 +16,9 @@ pca.frequency = 50 #set pwm clock in Hz (debug 60 was 1000)
 # usage: pwm_channel = pca.channels[0] instance example
 #        pwm_channel.duty_cycle = speed (0 .. 100)  speed example
 
+L1 = 100
+L2 = 105
+
 PWMOEN = 4 #pin 7 #PCA9685 OEn pin
 pwmOEn = GPIO.setup(PWMOEN, GPIO.OUT)  # enable PCA outputs
 
@@ -35,9 +38,33 @@ def getPWMPer(value):
   return int(valmap(value, 0, 180, 2038, 12.5/100 * 0xFFFF))
 
 def zeroArm():
-    pass
+  R1.duty_cycle = getPWMPer(90)
+  R2.duty_cycle = getPWMPer(90)
+  R3.duty_cycle = getPWMPer(90)
+  R4.duty_cycle = getPWMPer(90)
+  R5.duty_cycle = getPWMPer(90)
+
 def moveTo(point):
-    pass
+  beta = np.deg2rad(point[3])
+  alpha = np.deg2rad(point[2])
+  x = point[0]
+  y = point[1]
+  p2 = None
+  if beta > 90:
+    x2 = x + L1 * np.cos(beta)
+    y2 = y + L1 * np.sin(beta)
+    p2 = [x2, y2]
+  else:
+    x2 = x - L1 * np.cos(beta)
+    y2 = y - L1 * np.sin(beta)
+    p2 = [x2, y2]
+  t2 = np.arctan2(p2[1], p2[0])
+  t1 = (90 - t2) + beta
+  R1.duty_cycle = getPWMPer(np.rad2deg(alpha))
+  R2.duty_cycle = getPWMPer(np.rad2deg(t1))
+  R3.duty_cycle = getPWMPer(np.rad2deg(t2))
+  
+
 
 clawRange = []
 
@@ -48,8 +75,6 @@ screwLoc = [[100], [0], [-30], [140], True]
 
 
 # while True:
-R2.duty_cycle = getPWMPer(90)
-R3.duty_cycle = getPWMPer(90)
-R4.duty_cycle = getPWMPer(90)
-R5.duty_cycle = getPWMPer()
-sleep(2)
+zeroArm()
+time.sleep(1)
+moveTo(initLoc)
