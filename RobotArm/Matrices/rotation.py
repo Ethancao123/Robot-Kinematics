@@ -65,5 +65,5 @@ def mat_log(rot_mat):
         w = 1.0 / (2.0 * np.sin(theta)) * (rot_mat - rot_mat.T)
         return w * theta
 
-def rotateAbout(frame, vector):
-    vector. 
+def print(self):
+    print(self.matrix)
