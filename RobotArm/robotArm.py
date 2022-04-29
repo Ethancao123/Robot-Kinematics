@@ -35,6 +35,7 @@ def getPWMPer(value):
   return int(valmap(value, 0, 180, 2038, 12.5/100 * 0xFFFF))
 print(getPWMPer(0))
 # while True:
+R1.duty_cycle = getPWMPer(90)
 R2.duty_cycle = getPWMPer(90)
 R3.duty_cycle = getPWMPer(90)
 R4.duty_cycle = getPWMPer(90)
@@ -42,12 +43,12 @@ R5.duty_cycle = getPWMPer(90)
 
 while True:
     for i in range(180):
-        R1.duty_cycle = getPWMPer(i)
+        R3.duty_cycle = getPWMPer(i)
         time.sleep(0.02)
         print(i)
     time.sleep(1)
     for i in range(180):
-        R1.duty_cycle = getPWMPer(180-i)
+        R3.duty_cycle = getPWMPer(180-i)
         time.sleep(0.02)
         print(180-i)
     time.sleep(1)

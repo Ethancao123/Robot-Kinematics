@@ -81,6 +81,7 @@ class Frame:
                            [uy * ux * (1 - np.cos(a)) + uz * np.sin(a), np.cos(a) + uy ** 2 * (1 - np.cos(a)), uy * uz * (1 - np.cos(a)) - ux * np.sin(a)],
                            [uz * ux * (1 - np.cos(a) - uy * np.sin(a)), uz * uy * (1 - np.cos(a) + ux * np.sin(a)), np.cos(a) + uz ** 2 * (1 - np.cos(a))]])
         self.rotateWithMatrix(matrix)
+        return self.points
 
     def rotateAboutLine(self, origin, vector, angle):
         self.shift(np.matmul(-1, origin))

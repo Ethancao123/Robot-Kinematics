@@ -52,6 +52,7 @@ def zeroArm():
 
 def moveTo(point):
   beta = np.deg2rad(point[3])
+  alpha = (point[2] # kept in degrees
   x = point[0]
   y = point[1]
   p2 = None
@@ -65,7 +66,7 @@ def moveTo(point):
     p2 = [x2, y2]
   t2 = np.arctan2(p2[1], p2[0])
   t1 = (90 - t2) + beta
-  R1.duty_cycle = getPWMPer(point[2])
+  R1.duty_cycle = getPWMPer()
   R2.duty_cycle = getPWMPer(np.rad2deg(t1))
   R3.duty_cycle = getPWMPer(np.rad2deg(t2))
   
