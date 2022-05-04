@@ -16,8 +16,13 @@ pca.frequency = 50  # set pwm clock in Hz (debug 60 was 1000)
 # usage: pwm_channel = pca.channels[0] instance example
 #        pwm_channel.duty_cycle = speed (0 .. 100)  speed example
 
-L1 = 100
+L0 = 75
+L1 = 177
 L2 = 105
+
+speed = 90 # degree per second
+
+currentLoc = None
 
 PWMOEN = 4  # pin 7 #PCA9685 OEn pin
 pwmOEn = GPIO.setup(PWMOEN, GPIO.OUT)  # enable PCA outputs
@@ -26,8 +31,8 @@ R1 = pca.channels[0]
 R2 = pca.channels[1]
 R3 = pca.channels[2]
 R4 = pca.channels[3]
-R5 = pca.channels[4]
-clawRange = [40.60]
+R5 = pca.channels[15]
+clawRange = [70,30]
 
 
 # equivalent of Arduino map()
@@ -48,13 +53,24 @@ def getPWMPer(value):
 def zeroArm():
     R1.duty_cycle = getPWMPer(90)
     R2.duty_cycle = getPWMPer(90)
-    R3.duty_cycle = getPWMPer(90)
+    R3.duty_cycle = getPWMPer(180)
     R4.duty_cycle = getPWMPer(90)
     R5.duty_cycle = getPWMPer(90)
 
-def moveTo(point):
+def unscrew(direction=True, end=False):
+  R4.duty_cycle = getPWMPer(180)
+  time.sleep(0.5)
+  R5.duty_cycle = getPWMPer(clawRange[0])
+  time.sleep(0.5)
+  R4.duty_cycle = getPWMPer(0)
+  time.sleep(0.5)
+  if not end:
+    R5.duty_cycle = getPWMPer(50)
+    time.sleep(0.5)
+
+def moveTo(point, old, instant=False):
     beta = np.deg2rad(point[3])
-    alpha = (point[2]) # kept in degrees
+    alpha = (point[2][0]) # kept in degrees
     x = point[0]
     y = point[1]
     p2 = None
@@ -66,24 +82,59 @@ def moveTo(point):
       x2 = x - L1 * np.cos(beta)
       y2 = y - L1 * np.sin(beta)
       p2 = [x2, y2]
+    print(x2,y2)
     t2 = np.arctan2(p2[1], p2[0])
-    t1 = (90 - t2) + beta
-    R1.duty_cycle = getPWMPer(alpha)
-    R2.duty_cycle = getPWMPer(np.rad2deg(t1))
-    R3.duty_cycle = getPWMPer(np.rad2deg(t2))
+    t1 = (np.pi/2 - t2) + beta + np.pi/2
+    print(np.rad2deg(t1), np.rad2deg(t2))
+
+    delta = [t1 - old[0], t2 - old[1], alpha - old[2]]
+
+    print(delta)
+
+    maxTheta = np.rad2deg(max([delta[0], delta[1]]))
+
+    print("maxTheta", maxTheta)
+
+    if instant:
+      R1.duty_cycle = getPWMPer(alpha)
+      R2.duty_cycle = getPWMPer(np.rad2deg(t2))
+      R3.duty_cycle = getPWMPer(np.rad2deg(t1))
+    else:
+      for i in range(int(maxTheta)):
+        percent = i / maxTheta
+        R1.duty_cycle = getPWMPer(old[2] + percent * delta[2])
+        R2.duty_cycle = getPWMPer(np.rad2deg(old[1] + percent * delta[1][0]))
+        R3.duty_cycle = getPWMPer(np.rad2deg(old[0] + percent * delta[0][0]))
+        time.sleep(1/(speed))
+
+    time.sleep(0.5) # remove after speed implementation
 
     if point[4]:
       R5.duty_cycle = getPWMPer(clawRange[0])
     else:
       R5.duty_cycle = getPWMPer(clawRange[1])
+    return [t1,t2,alpha]
 
 # points using coords [x,y,thetaBase, thetaClaw, grabbing] in mm and degrees:
-initLoc = [[0], [0], [0], [0], False]
-nutLoc = [[100], [100], [30], [90], False]
+initLoc = [[0], [205], [0], [90], False]
+over = [[100], [105], [30], [0], True]
+under = [[-105], [100], [180], [90], False]
+test = [[167], [114], [0], [27], False]
+nutLoc = [[122], [81], [36.5], [-15], False]
+backLoc = [[40], [85], [36.5], [-15], True]
 screwLoc = [[100], [0], [-30], [140], True]
 
 
 # while True:
-zeroArm()
-time.sleep(1)
-moveTo(initLoc)
+temp = [np.pi,np.pi/2,0]
+temp = moveTo(initLoc, temp, instant=True)
+# temp = moveTo(over, temp)
+# #temp = moveTo(under, temp)
+# temp = moveTo(test, temp)
+temp = moveTo(nutLoc, temp)
+for i in range(2):
+  unscrew()
+unscrew(end=True)
+
+temp = moveTo(backLoc, temp)
+temp = moveTo(initLoc, temp)

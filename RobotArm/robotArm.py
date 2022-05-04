@@ -33,7 +33,6 @@ def valmap(value, istart, istop, ostart, ostop):
 #full range 0xFFFF, but PCS9685 ignores last Hex digit as only 12 bit resolution)
 def getPWMPer(value): 
   return int(valmap(value, 0, 180, 2038, 12.5/100 * 0xFFFF))
-print(getPWMPer(0))
 # while True:
 R1.duty_cycle = getPWMPer(90)
 R2.duty_cycle = getPWMPer(90)
