@@ -1,6 +1,5 @@
 import time
 import numpy as np
-import Matrices.frame as fr
 from board import SCL, SDA
 import busio
 from adafruit_pca9685 import PCA9685
@@ -32,7 +31,7 @@ R2 = pca.channels[1]
 R3 = pca.channels[2]
 R4 = pca.channels[3]
 R5 = pca.channels[15]
-clawRange = [70,30]
+clawRange = [90,30]
 
 
 # equivalent of Arduino map()
@@ -65,7 +64,7 @@ def unscrew(direction=True, end=False):
   R4.duty_cycle = getPWMPer(0)
   time.sleep(0.5)
   if not end:
-    R5.duty_cycle = getPWMPer(50)
+    R5.duty_cycle = getPWMPer(30)
     time.sleep(0.5)
 
 def moveTo(point, old, instant=False):
@@ -93,8 +92,6 @@ def moveTo(point, old, instant=False):
 
     maxTheta = np.rad2deg(max([delta[0], delta[1]]))
 
-    print("maxTheta", maxTheta)
-
     if instant:
       R1.duty_cycle = getPWMPer(alpha)
       R2.duty_cycle = getPWMPer(np.rad2deg(t2))
@@ -117,24 +114,31 @@ def moveTo(point, old, instant=False):
 
 # points using coords [x,y,thetaBase, thetaClaw, grabbing] in mm and degrees:
 initLoc = [[0], [205], [0], [90], False]
-over = [[100], [105], [30], [0], True]
-under = [[-105], [100], [180], [90], False]
-test = [[167], [114], [0], [27], False]
-nutLoc = [[122], [81], [36.5], [-15], False]
-backLoc = [[40], [85], [36.5], [-15], True]
-screwLoc = [[100], [0], [-30], [140], True]
+closedInitLoc = [[0], [205], [0], [90], True]
+# over = [[100], [105], [30], [0], True]
+# under = [[-105], [100], [180], [90], False]
+# test = [[167], [114], [0], [27], False]
+nutLoc = [[135], [84], [30], [-7], False]
+openBackLoc = [[40], [85], [36.4], [-15], False]
+backLoc = [[40], [85], [36.4], [-15], True]
+preScrewLoc = [[150], [140], [126.5], [-65], True]
+screwLoc = [[125], [50], [126.5], [-80], True]
 
-
-# while True:
 temp = [np.pi,np.pi/2,0]
 temp = moveTo(initLoc, temp, instant=True)
-# temp = moveTo(over, temp)
-# #temp = moveTo(under, temp)
-# temp = moveTo(test, temp)
+temp = moveTo(openBackLoc, temp,)
 temp = moveTo(nutLoc, temp)
-for i in range(2):
+for i in range(5):
   unscrew()
 unscrew(end=True)
-
 temp = moveTo(backLoc, temp)
+temp = moveTo(closedInitLoc, temp)
+R1.duty_cycle = getPWMPer(120)
+time.sleep(1)
+R4.duty_cycle = getPWMPer(60)
+temp = moveTo(preScrewLoc, temp, instant=True)
+time.sleep(1)
+temp = moveTo(screwLoc, temp, instant=True)
+R5.duty_cycle = getPWMPer(30)
+time.sleep(1)
 temp = moveTo(initLoc, temp)

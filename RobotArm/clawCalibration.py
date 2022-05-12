@@ -30,19 +30,20 @@ R1 = pca.channels[0]
 R2 = pca.channels[1]
 R3 = pca.channels[2]
 R4 = pca.channels[3]
-R5 = pca.channels[4]
+R5 = pca.channels[15]
 
 L0 = 75
 L1 = 177
 L2 = 105
 
-clawRange = [85,30]
+clawRange = [87,35]
 
 # for i in range(180):
 #     R5.duty_cycle = getPWMPer(i)
 #     print(i)
 #     time.sleep(0.1)
 
+R1.duty_cycle = getPWMPer(30)
 while True:
    R5.duty_cycle = getPWMPer(clawRange[0])
    time.sleep(1)
